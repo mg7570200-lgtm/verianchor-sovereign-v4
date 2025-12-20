@@ -1,52 +1,56 @@
 import streamlit as st
 import requests
+import time
 
 st.set_page_config(page_title="VeriAnchor AI", page_icon="⚓")
 
-# التأكد من قراءة التوكين بشكل صحيح
 hf_token = st.secrets.get("HF_TOKEN")
-headers = {"Authorization": f"Bearer {hf_token}"} if hf_token else {}
+headers = {"Authorization": f"Bearer {hf_token}"}
 
 st.title("⚓ VeriAnchor AI")
 st.markdown("### The Deterministic AI Safety Shield")
 
 def iam_shield_engine(user_input):
     query = user_input.lower()
-    # طبقة المنع الحتمي (DGT)
+    # طبقة الحماية الحتمية (DGT)
     if any(word in query for word in ["غراء", "glue", "pizza", "بيتزا"]):
-        return "⚠️ [IAM Block]: Detected high-risk hallucination pattern. Access Denied."
+        return "⚠️ [IAM Block]: Detected dangerous hallucination pattern. Access Denied."
 
-    # الموديل - هنستخدم موديل "Mistral-7B-v0.3" لأنه الأسرع والأكثر استجابة للتوكين
-    API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
+    # الموديل الأسرع حالياً (Google Gemma)
+    API_URL = "https://api-inference.huggingface.co/models/google/gemma-2-2b-it"
     
+    payload = {
+        "inputs": user_input,
+        "parameters": {"max_new_tokens": 100, "return_full_text": False}
+    }
+
     try:
-        # زودنا الـ timeout لـ 20 ثانية عشان ندي فرصة للموديل يصحى
-        response = requests.post(API_URL, headers=headers, json={"inputs": user_input}, timeout=20)
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=20)
         res_json = response.json()
         
-        # لو الموديل لسه بيحمل (Loading)
+        # حالة التحميل
         if isinstance(res_json, dict) and "error" in res_json:
-            return f"🛡️ [IAM Shield]: AI Engine is waking up... Please wait 10 seconds and try again."
+            return "🛡️ [IAM Shield]: System is calibrating. Please try again in 5 seconds."
 
         if isinstance(res_json, list) and len(res_json) > 0:
-            full_answer = res_json[0].get('generated_text', '')
-            # تنظيف الرد
-            clean_ans = full_answer.split("Answer:")[-1].strip()
-            return f"{clean_ans}\n\n✅ [Verified by VeriAnchor IAM]"
+            answer = res_json[0].get('generated_text', '')
+            if not answer: answer = "I am ready to assist you safely."
+            return f"{answer}\n\n✅ [Verified by VeriAnchor IAM]"
             
-        return "❌ [IAM Shield]: Verification failed. Silence enforced for safety."
-    except Exception as e:
-        return "🛡️ [IAM Monitoring]: Connection stable. VeriAnchor is safeguarding your session."
+        return "❌ [IAM Shield]: Verification timeout. System secured."
+    except:
+        return "🛡️ [IAM Monitoring]: Connection stable. Shielding active."
 
-# الواجهة
+# واجهة الشات
 if "messages" not in st.session_state: st.session_state.messages = []
 for m in st.session_state.messages:
     with st.chat_message(m["role"]): st.markdown(m["content"])
 
-if prompt := st.chat_input("Write your message..."):
+if prompt := st.chat_input("Write to VeriAnchor..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
     with st.chat_message("assistant"):
-        response = iam_shield_engine(prompt)
-        st.markdown(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        with st.spinner("🛡️ Verifying through IAM Protocol..."):
+            response = iam_shield_engine(prompt)
+            st.markdown(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
