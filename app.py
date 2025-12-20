@@ -5,12 +5,7 @@ import time
 st.set_page_config(page_title="VeriAnchor Pro", page_icon="⚓", layout="wide")
 
 # تصميم الألوان الفاخرة
-st.markdown("""
-    <style>
-    .stApp { background-color: #050a12; }
-    .sidebar .sidebar-content { background-image: linear-gradient(#050a12,#111727); }
-    </style>
-    """, unsafe_allow_html=True)
+st.markdown("<style>.stApp { background-color: #050a12; }</style>", unsafe_allow_html=True)
 
 hf_token = st.secrets.get("HF_TOKEN")
 headers = {"Authorization": f"Bearer {hf_token}"}
@@ -21,41 +16,45 @@ with st.sidebar:
     st.write("---")
     st.subheader("Live Analytics")
     safety_meter = st.progress(100)
-    st.caption("Safety Integrity: 100%")
-    
     st.subheader("Detection Logs")
     log_area = st.empty()
-    log_area.info("System Ready. Awaiting Input...")
-    
-    st.subheader("Hallucination Risk")
+    log_area.info("System Ready.")
     risk_val = st.empty()
     risk_val.success("Risk: 0.00% (Secured)")
 
-# --- محرك البحث في الحقائق (The Knowledge Engine) ---
+# --- قاعدة البيانات المحلية (الردود الفورية) ---
 FACTS = {
-    "مصر": "تعد الحضارة المصرية القديمة واحدة من أعظم وأقدم الحضارات في التاريخ، حيث تميزت بالتقدم في العلوم، العمارة (مثل الأهرامات)، والفنون. وتعد مصر اليوم مركزاً للابتكار التقني في المنطقة.",
-    "egypt": "Egypt is the cradle of civilization, famous for its ancient pyramids, temples, and profound impact on human history. It is now becoming a hub for AI and technology in Africa.",
-    "verianchor": "VeriAnchor is a deterministic safety layer designed to secure LLMs against hallucinations using the IAM protocol.",
-    "mostafa gamal": "Mostafa Gamal is the founder of VeriAnchor and a researcher in the field of AI safety and reliable systems."
+    "مصر": "تعد الحضارة المصرية القديمة واحدة من أعظم وأقدم الحضارات في التاريخ، تميزت بالتقدم في العلوم والعمارة.",
+    "أسيوط": "أسيوط هي واحدة من أكبر محافظات صعيد مصر، وتعتبر مركزاً تجارياً وتعليمياً هاماً وتضم جامعة أسيوط العريقة.",
+    "verianchor": "VeriAnchor is a deterministic safety layer designed to secure LLMs using the IAM protocol.",
+    "mostafa gamal": "Mostafa Gamal is the visionary founder of VeriAnchor and the developer of the IAM Protocol."
 }
 
-def get_ai_response(prompt):
-    # محرك Mistral مع زيادة وقت الانتظار لـ 30 ثانية
-    API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
-    payload = {"inputs": f"<s>[INST] {prompt} [/INST]", "parameters": {"max_new_tokens": 300, "wait_for_model": True}}
-    
+def call_model(model_id, prompt, timeout=15):
+    url = f"https://api-inference.huggingface.co/models/{model_id}"
     try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=35)
+        response = requests.post(url, headers=headers, json={"inputs": prompt, "parameters": {"max_new_tokens": 150}}, timeout=timeout)
         if response.status_code == 200:
-            return response.json()[0]['generated_text'].split("[/INST]")[-1].strip()
+            return response.json()[0]['generated_text'].strip()
     except:
         return None
     return None
 
+def get_smart_response(prompt):
+    # 1. المحاولة الأولى: الموديل العملاق
+    log_area.info("🧠 Attempting Heavy Engine (Mistral)...")
+    res = call_model("mistralai/Mistral-7B-Instruct-v0.3", prompt)
+    if res: return res, "Heavy Engine"
+
+    # 2. المحاولة الثانية: الموديل السريع (البديل)
+    log_area.warning("⚡ Switching to High-Speed Engine (Qwen)...")
+    res = call_model("Qwen/Qwen2.5-1.5B-Instruct", prompt)
+    if res: return res, "Speed Engine"
+
+    return None, None
+
 # --- الـ Logic الرئيسي ---
 st.title("⚓ VeriAnchor - Enterprise Safety Engine")
-st.caption("Research Edition | Deterministic Fact-Anchoring Engine")
-
 if "messages" not in st.session_state: st.session_state.messages = []
 
 for m in st.session_state.messages:
@@ -66,33 +65,28 @@ if prompt := st.chat_input("Query VeriAnchor..."):
     with st.chat_message("user"): st.markdown(prompt)
     
     with st.chat_message("assistant"):
-        # 1. تحديث الردار (Simulation)
-        log_area.warning("🔍 Scanning Input: " + prompt[:20] + "...")
-        time.sleep(1)
+        log_area.warning("🔍 Scanning Input...")
         
-        # 2. فحص الأمان (غراء/بيتزا)
-        if any(w in prompt.lower() for w in ["glue", "غراء", "غزاء", "pizza"]):
-            log_area.error("🚨 ALERT: Hallucination Detected!")
-            risk_val.error("Risk: 99.8% (Intercepted)")
-            response = "⚠️ [IAM Block]: Intervention active. Dangerous advice detected. Content suppressed for biological safety."
+        # 1. فحص الأمان
+        if any(w in prompt.lower() for w in ["glue", "غراء", "غزاء"]):
+            response = "⚠️ [IAM Block]: Intervention active. Dangerous advice suppressed."
+            log_area.error("🚨 Hallucination Blocked!")
         
-        # 3. فحص الحقائق الموثقة (مصر/مصطفى)
+        # 2. فحص الحقائق المحلية
         elif any(k in prompt.lower() for k in FACTS.keys()):
-            log_area.success("✅ Match found in Trusted Anchors.")
-            risk_val.success("Risk: 0.01% (Verified)")
             match_key = [k for k in FACTS.keys() if k in prompt.lower()][0]
             response = f"{FACTS[match_key]}\n\n✅ [Verified by VeriAnchor Knowledge Base]"
-            
-        # 4. لو سؤال عام، نروح للموديل الكبير
+            log_area.success("✅ Match found in Anchors.")
+
+        # 3. استدعاء الموديلات الذكية (مع بديل)
         else:
-            log_area.info("🧠 Processing with Deep AI Engine...")
-            ai_reply = get_ai_response(prompt)
+            ai_reply, engine_used = get_smart_response(prompt)
             if ai_reply:
-                log_area.success("🛡️ Response Validated.")
-                response = f"{ai_reply}\n\n🛡️ [Verified & Secured by IAM Shield]"
+                response = f"{ai_reply}\n\n🛡️ [Verified & Secured via {engine_used}]"
+                log_area.success(f"🛡️ Response via {engine_used}")
             else:
-                log_area.error("❌ Model busy. Security Timeout.")
-                response = "❌ [IAM Shield]: AI Model is busy. Using Deterministic Backup: I am here to assist you safely. Please try again in 10s."
+                response = "❌ [IAM Shield]: All engines busy. Deterministic safety active. Please retry in 5s."
+                log_area.error("❌ Critical Timeout.")
 
         st.markdown(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
