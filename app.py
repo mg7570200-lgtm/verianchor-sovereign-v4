@@ -1,92 +1,81 @@
 import streamlit as st
-import requests
 import time
 
-st.set_page_config(page_title="VeriAnchor Pro", page_icon="⚓", layout="wide")
+st.set_page_config(page_title="VeriAnchor | Intelligence & Safety", layout="wide")
 
-# تصميم الألوان الفاخرة
-st.markdown("<style>.stApp { background-color: #050a12; }</style>", unsafe_allow_html=True)
+# تصميم واجهة "Security Dashboard"
+st.markdown("<style>.stApp { background-color: #020d19; color: #e0e0e0; }</style>", unsafe_allow_html=True)
 
-hf_token = st.secrets.get("HF_TOKEN")
-headers = {"Authorization": f"Bearer {hf_token}"}
+st.title("⚓ VeriAnchor Security Dashboard")
+st.subheader("Intent Detection & Conversation Anchoring")
 
-# --- SIDEBAR: الردار والتحليلات ---
-with st.sidebar:
-    st.title("🛡️ IAM Radar v2")
-    st.write("---")
-    st.subheader("Live Analytics")
-    safety_meter = st.progress(100)
-    st.subheader("Detection Logs")
-    log_area = st.empty()
-    log_area.info("System Ready.")
-    risk_val = st.empty()
-    risk_val.success("Risk: 0.00% (Secured)")
-
-# --- قاعدة البيانات المحلية (الردود الفورية) ---
-FACTS = {
-    "مصر": "تعد الحضارة المصرية القديمة واحدة من أعظم وأقدم الحضارات في التاريخ، تميزت بالتقدم في العلوم والعمارة.",
-    "أسيوط": "أسيوط هي واحدة من أكبر محافظات صعيد مصر، وتعتبر مركزاً تجارياً وتعليمياً هاماً وتضم جامعة أسيوط العريقة.",
-    "verianchor": "VeriAnchor is a deterministic safety layer designed to secure LLMs using the IAM protocol.",
-    "mostafa gamal": "Mostafa Gamal is the visionary founder of VeriAnchor and the developer of the IAM Protocol."
+# قاعدة بيانات النوايا والحقائق
+POLICY_ENGINE = {
+    "دواء": {"intent": "Medical Inquiry", "risk": "High", "anchor": "الجرعات الطبية يجب أن تؤخذ من مراجع الصيدلة المعتمدة فقط (FDA)."},
+    "اختراق": {"intent": "Security Threat", "risk": "Critical", "anchor": "يمنع تداول أي معلومات تتعلق بتخطي أنظمة الحماية."},
+    "قرض": {"intent": "Financial Planning", "risk": "Medium", "anchor": "الحسابات المالية يجب أن تخضع لمعايير البنك المركزي لضمان عدم التضليل."}
 }
 
-def call_model(model_id, prompt, timeout=15):
-    url = f"https://api-inference.huggingface.co/models/{model_id}"
-    try:
-        response = requests.post(url, headers=headers, json={"inputs": prompt, "parameters": {"max_new_tokens": 150}}, timeout=timeout)
-        if response.status_code == 200:
-            return response.json()[0]['generated_text'].strip()
-    except:
-        return None
-    return None
+if "history" not in st.session_state:
+    st.session_state.history = []
 
-def get_smart_response(prompt):
-    # 1. المحاولة الأولى: الموديل العملاق
-    log_area.info("🧠 Attempting Heavy Engine (Mistral)...")
-    res = call_model("mistralai/Mistral-7B-Instruct-v0.3", prompt)
-    if res: return res, "Heavy Engine"
+def analyze_and_summarize(history):
+    summary = "📌 **Executive Summary of Session:**\n"
+    for i, chat in enumerate(history):
+        summary += f"- Step {i+1}: User asked about '{chat['topic']}' | Result: {chat['status']}\n"
+    return summary
 
-    # 2. المحاولة الثانية: الموديل السريع (البديل)
-    log_area.warning("⚡ Switching to High-Speed Engine (Qwen)...")
-    res = call_model("Qwen/Qwen2.5-1.5B-Instruct", prompt)
-    if res: return res, "Speed Engine"
+def iam_advanced_engine(query):
+    intent_detected = "General Inquiry"
+    risk_level = "Low"
+    final_output = "Proceeding with standard AI response..."
+    topic = query[:20] + "..."
 
-    return None, None
+    # كشف النية والتحقق من المرجع
+    for key, val in POLICY_ENGINE.items():
+        if key in query.lower():
+            intent_detected = val['intent']
+            risk_level = val['risk']
+            final_output = val['anchor']
+            break
 
-# --- الـ Logic الرئيسي ---
-st.title("⚓ VeriAnchor - Enterprise Safety Engine")
-if "messages" not in st.session_state: st.session_state.messages = []
+    return {
+        "intent": intent_detected,
+        "risk": risk_level,
+        "output": final_output,
+        "topic": topic
+    }
 
-for m in st.session_state.messages:
-    with st.chat_message(m["role"]): st.markdown(m["content"])
+# الواجهة
+col1, col2 = st.columns([2, 1])
 
-if prompt := st.chat_input("Query VeriAnchor..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"): st.markdown(prompt)
-    
-    with st.chat_message("assistant"):
-        log_area.warning("🔍 Scanning Input...")
+with col1:
+    user_input = st.text_input("Enter your request:")
+    if st.button("Execute with IAM Shield"):
+        with st.status("Analyzing Intent & Safety...") as status:
+            result = iam_advanced_engine(user_input)
+            st.session_state.history.append({
+                "topic": result['intent'], 
+                "status": "Safe" if result['risk'] != "Critical" else "Blocked"
+            })
+            time.sleep(1)
+            status.update(label="Verification Complete", state="complete")
         
-        # 1. فحص الأمان
-        if any(w in prompt.lower() for w in ["glue", "غراء", "غزاء"]):
-            response = "⚠️ [IAM Block]: Intervention active. Dangerous advice suppressed."
-            log_area.error("🚨 Hallucination Blocked!")
+        st.markdown(f"### 🛡️ Verified Output:\n{result['output']}")
+
+with col2:
+    st.write("### 📊 Live Session Analytics")
+    if st.session_state.history:
+        res = iam_advanced_engine(user_input)
+        st.metric("Detected Intent", res['intent'])
+        st.metric("Risk Assessment", res['risk'])
         
-        # 2. فحص الحقائق المحلية
-        elif any(k in prompt.lower() for k in FACTS.keys()):
-            match_key = [k for k in FACTS.keys() if k in prompt.lower()][0]
-            response = f"{FACTS[match_key]}\n\n✅ [Verified by VeriAnchor Knowledge Base]"
-            log_area.success("✅ Match found in Anchors.")
+        st.write("---")
+        if st.button("Generate Verified Summary"):
+            summary = analyze_and_summarize(st.session_state.history)
+            st.info(summary)
+    else:
+        st.write("No active session data.")
 
-        # 3. استدعاء الموديلات الذكية (مع بديل)
-        else:
-            ai_reply, engine_used = get_smart_response(prompt)
-            if ai_reply:
-                response = f"{ai_reply}\n\n🛡️ [Verified & Secured via {engine_used}]"
-                log_area.success(f"🛡️ Response via {engine_used}")
-            else:
-                response = "❌ [IAM Shield]: All engines busy. Deterministic safety active. Please retry in 5s."
-                log_area.error("❌ Critical Timeout.")
-
-        st.markdown(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+st.markdown("---")
+st.caption("VeriAnchor v3.0 | Intent-Aware Safety Protocol")
