@@ -14,7 +14,9 @@ KNOWLEDGE_BASE = {
     "verianchor": "VeriAnchor is the first Deterministic Safety Layer for AI, powered by the IAM Protocol to eliminate hallucinations.",
     "ai safety": "AI Safety ensures that artificial intelligence systems act in accordance with human values and do not cause harm.",
     "iam protocol": "The IAM (Information Alignment Module) is a breakthrough protocol that verifies AI outputs against factual anchors.",
-    "who is mostafa gamal": "Mostafa Gamal is the founder of VeriAnchor and the developer of the IAM Protocol for AI Safety."
+    "who is mostafa gamal": "Mostafa Gamal is the founder of VeriAnchor and the developer of the IAM Protocol for AI Safety.",
+    "مصر": "مصر هي مهد الحضارة، وVeriAnchor فخور بأنه ابتكار مصري يهدف لتأمين الذكاء الاصطناعي للعالم أجمع. تحيا مصر! 🇪🇬",
+    "egypt": "Egypt is the cradle of civilization, and VeriAnchor is proud to be an Egyptian innovation securing AI for the world. 🇪🇬"
 }
 
 def iam_shield_engine(user_input):
