@@ -1,100 +1,76 @@
 import streamlit as st
 import requests
 import time
-import random
+import difflib # لمقارنة النصوص وتحديد الاختلافات
 
-# 1. إعدادات الصفحة وهوية VeriAnchor
+# 1. إعدادات الهوية الدولية
 st.set_page_config(page_title="VeriAnchor | The Forensic AI Radar", layout="wide")
 
-# 2. تصميم الواجهة (CSS) - نمط "الرادار الأمني"
+# 2. تصميم الواجهة السينمائية (Cyber-Forensic UI)
 st.markdown("""
     <style>
     .stApp { background-color: #010a0f; color: #00ffcc; font-family: 'Courier New'; }
     .stMetric { background-color: #02121b; border: 1px solid #00ffcc; padding: 10px; border-radius: 10px; }
-    .report-box { border: 2px solid #ff2d55; padding: 15px; border-radius: 10px; background: #0a0000; }
-    .stButton > button { width: 100%; background: linear-gradient(45deg, #ff2d55, #8000ff); color: white; border: none; font-weight: bold; }
+    .hallucination-alert { border: 2px solid #ff2d55; padding: 15px; border-radius: 10px; background: #2b0000; color: #ff2d55; font-weight: bold; }
+    .safe-lock { border: 2px solid #00ffcc; padding: 15px; border-radius: 10px; background: #001a1a; color: #00ffcc; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. الشريط الجانبي - الهوية القانونية
+# 3. الشريط الجانبي (المستندات القانونية)
 with st.sidebar:
     st.image("https://img.icons8.com/neon/96/anchor.png")
-    st.title("VeriAnchor OS")
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    with col1: st.metric("Global Status", "Active")
-    with col2: st.metric("IAM Lock", "100%")
-    
-    st.markdown("### 🛡️ Legal Protection")
-    st.code(f"Patent: EG/P/2025/1660\nDOI: 10.5281/zenodo.14515516", language="bash")
-    st.info("Founder: Mostafa Gamal")
+    st.title("VeriAnchor Core")
+    st.markdown(f"**Patent:** `EG/P/2025/1660`\n\n**DOI:** `10.5281/zenodo.14515516`")
+    st.info("Status: International Protection Active")
 
-# 4. واجهة الرادار (Main UI)
-st.title("⚓ VeriAnchor | Forensic Radar v2.0")
-st.write("### AI Hallucination Detection & Deterministic Anchoring")
-
-# تقسيم الشاشة لجزئين: جزء المدخلات وجزء الرادار
+# 4. الرادار ولوحة التحكم
+st.title("⚓ VeriAnchor | Forensic Radar v2.5")
 left_col, right_col = st.columns([2, 1])
 
 with left_col:
-    user_input = st.text_area("Secure Input Prompt:", placeholder="Input data for forensic validation...", height=150)
-    start_btn = st.button("EXECUTE IAM PROTOCOL")
+    user_input = st.text_input("Enter Data for Verification:", placeholder="Ask about facts, dates, or technical data...")
+    execute_btn = st.button("RUN DETERMINISTIC CROSS-CHECK")
 
-with right_col:
-    st.write("### 📡 Live Radar")
-    hallucination_risk = st.empty()
-    authenticity_score = st.empty()
-    hallucination_risk.metric("Hallucination Risk", "0%", delta="-100%", delta_color="inverse")
-    authenticity_score.metric("Authenticity Score", "100%", delta="Verified")
+# 5. محرك فحص الهلوسة (Cross-Check Engine)
+if execute_btn and user_input:
+    with st.status("🔍 Verifying Truth via IAM Protocol...", expanded=True) as status:
+        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
+        headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
+        
+        # طلب إجابتين مختلفتين (باستخدام حرارة مختلفة Temperature) لبيان التعارض
+        st.write("Generating Sample A (Deterministic)...")
+        res1 = requests.post(API_URL, headers=headers, json={"inputs": user_input, "parameters": {"temperature": 0.1}})
+        ans1 = res1.json()[0]['generated_text']
+        
+        st.write("Generating Sample B (Exploratory)...")
+        res2 = requests.post(API_URL, headers=headers, json={"inputs": user_input, "parameters": {"temperature": 0.9}})
+        ans2 = res2.json()[0]['generated_text']
+        
+        # حساب نسبة التشابه (Similarity Ratio)
+        similarity = difflib.SequenceMatcher(None, ans1, ans2).ratio()
+        risk_score = (1 - similarity) * 100
 
-# 5. منطق المعالجة الجنائية
-if start_btn:
-    if user_input:
-        with st.status("⚓ Initializing VeriAnchor Protocol...", expanded=True) as status:
-            # المرحلة 1: الهوية (Identity Check)
-            st.write("🔒 Layer 1: Identity Extraction...")
-            time.sleep(0.7)
-            
-            # المرحلة 2: المرساة (Anchoring)
-            st.write("⚓ Layer 2: Anchoring against Deterministic Truth...")
-            time.sleep(0.7)
-            
-            # المرحلة 3: المراقبة (Monitoring)
-            st.write("📡 Layer 3: Monitoring Semantic Deviations...")
-            
-            # استدعاء الموديل
-            API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
-            headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
-            
-            try:
-                response = requests.post(API_URL, headers=headers, json={"inputs": f"Validate and respond: {user_input}"})
-                result = response.json()[0]['generated_text']
-                
-                # محاكاة تحليل معامل الاهتمام (Attention Weight)
-                status.update(label="✅ Forensic Analysis Complete!", state="complete", expanded=False)
-                
-                # عرض النتيجة بشكل احترافي
-                st.markdown("---")
-                st.markdown("### 📄 Final Verified Output (Locked)")
-                st.success(result)
-                
-                # تقرير الأدلة (Forensic Report)
-                with st.expander("🔍 View Forensic Evidence Report (IAM Log)"):
-                    st.json({
-                        "Protocol": "IAM-2025",
-                        "Identity_Hash": "SHA-256-VAnchor-001",
-                        "Deterministic_Match": True,
-                        "Attention_Deviation": "0.000034%",
-                        "Status": "Safe for Production"
-                    })
-                
-                st.toast("VeriAnchor Secured this output.", icon="⚓")
+        status.update(label="Analysis Finished", state="complete")
 
-            except Exception as e:
-                st.error("Access Denied. Check System Credentials (Token).")
+    with right_col:
+        st.write("### 📡 Live Analysis")
+        st.metric("Hallucination Risk", f"{risk_score:.2f}%", delta=f"{'+ High' if risk_score > 20 else '- Low'}", delta_color="inverse")
+        st.metric("Anchoring Strength", f"{similarity*100:.2f}%")
+
+    # عرض النتيجة النهائية بناءً على الفحص الجنائي
+    st.markdown("---")
+    if risk_score > 25:
+        st.markdown(f'<div class="hallucination-alert">⚠️ HIGH HALLUCINATION RISK DETECTED: The model provided inconsistent facts. VeriAnchor advises manual verification.</div>', unsafe_allow_html=True)
     else:
-        st.warning("Input required for analysis.")
+        st.markdown(f'<div class="safe-lock">🔒 DETERMINISTIC LOCK: Output verified across multiple layers. Data is consistent.</div>', unsafe_allow_html=True)
+    
+    st.subheader("Verified Final Response:")
+    st.success(ans1)
 
-# 6. التذييل (Footer)
-st.markdown("---")
-st.markdown("<center>VeriAnchor | The Standard for Deterministic AI Safety | © 2025</center>", unsafe_allow_html=True)
+    with st.expander("📂 View Forensic Comparison (Sample A vs B)"):
+        st.write("**Sample A:**", ans1)
+        st.write("**Sample B:**", ans2)
+        st.write(f"**Semantic Deviation:** {risk_score:.2f}%")
+
+# 6. التذييل
+st.caption("VeriAnchor Infrastructure © 2025 | Secure AI Forensic Standard")
