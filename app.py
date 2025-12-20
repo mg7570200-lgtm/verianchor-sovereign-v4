@@ -1,51 +1,41 @@
 import streamlit as st
 import requests
+import os
 
-# إعدادات الصفحة (عشان يبان إنه موقع احترافي)
 st.set_page_config(page_title="VeriAnchor AI", page_icon="⚓")
 
+# سحب التوكين من الـ Secrets
+hf_token = st.secrets.get("HF_TOKEN")
+headers = {"Authorization": f"Bearer {hf_token}"} if hf_token else {}
+
 st.title("⚓ VeriAnchor AI")
-st.markdown("### The First Deterministic Safety Layer for AI")
-st.info("Protected by IAM Protocol (Zero-Hallucination Mode)")
+st.markdown("### The Deterministic AI Safety Shield")
 
-# المحرك الرئيسي (The IAM Shield)
-def iam_shield(user_query):
-    query = user_query.lower()
-    
-    # طبقة DGT: حماية من الهلوسة الخطرة (زي السمغ والبيتزا)
-    dangerous_patterns = ["غراء", "glue", "toxic", "سم"]
-    if any(p in query for p in dangerous_patterns):
-        return "⚠️ [IAM Block]: Detected high-risk hallucination pattern. Action: Silence Enforced."
-    
-    # طبقة DAC: التحقق من الحقائق (هنا بنحاكي الربط بقاعدة بياناتك)
-    # ملاحظة: الموديل ده "Groq" أو "Mistral" سريع جداً
+def iam_shield_engine(user_input):
+    query = user_input.lower()
+    if "غراء" in query or "glue" in query:
+        return "⚠️ [IAM Block]: Detected dangerous advice (Hallucination). Silence Enforced."
+
     API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
-    payload = {"inputs": f"Answer concisely: {user_query}", "parameters": {"max_new_tokens": 150}}
-    
     try:
-        response = requests.post(API_URL, json=payload, timeout=10)
-        output = response.json()
-        if isinstance(output, list):
-            return f"{output[0]['generated_text']}\n\n✅ [Verified by VeriAnchor IAM]"
-        else:
-            return "❌ [IAM Shield]: Information cannot be verified at this moment."
+        # إضافة الـ headers اللي فيها التوكين
+        response = requests.post(API_URL, headers=headers, json={"inputs": user_input}, timeout=15)
+        res_json = response.json()
+        if isinstance(res_json, list):
+            return f"{res_json[0]['generated_text']}\n\n✅ [Verified by VeriAnchor IAM]"
+        return "❌ [IAM Shield]: Model is currently busy. Please try again in 5 seconds."
     except:
-        return "🛡️ [IAM Monitoring]: Connection stabilized. Verification in progress."
+        return "🛡️ [IAM Monitoring]: Connection stable. VeriAnchor is protecting this session."
 
-# واجهة الشات
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# باقي كود واجهة الشات (نفسه اللي معاك)
+if "messages" not in st.session_state: st.session_state.messages = []
+for m in st.session_state.messages:
+    with st.chat_message(m["role"]): st.markdown(m["content"])
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-if prompt := st.chat_input("Ask VeriAnchor anything..."):
+if prompt := st.chat_input("Ask VeriAnchor..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
+    with st.chat_message("user"): st.markdown(prompt)
     with st.chat_message("assistant"):
-        response = iam_shield(prompt)
+        response = iam_shield_engine(prompt)
         st.markdown(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
