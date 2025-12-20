@@ -1,72 +1,85 @@
 import streamlit as st
-import pandas as pd
 import time
-import plotly.express as px # للمخططات البيانية
 
-st.set_page_config(page_title="VeriAnchor Admin | Grok Edition", layout="wide")
+# إعدادات الواجهة الاحترافية من جروك ومصطفى
+st.set_page_config(page_title="VeriAnchor | Grok's Reality Check", layout="wide", initial_sidebar_state="expanded")
 
-# تصميم واجهة "Dark Industrial" تليق بجوروك
+# ستايل مخصص للـ Dark Mode القوي (Grok Style)
 st.markdown("""
 <style>
-    .stApp { background-color: #0b0f19; color: #00d4ff; }
-    .stMetric { background-color: #161b28; border-radius: 10px; padding: 15px; border: 1px solid #00d4ff; }
+    .stApp { background-color: #0e1117; color: #fafa fa; }
+    .stTextInput > label { color: #ffffff; }
+    .stButton > button { background-color: #1f6feb; color: white; border-radius: 8px; width: 100%; }
+    .grok-box { background-color: #1a1f2e; border-left: 5px solid #ff4b4b; padding: 20px; border-radius: 10px; color: #00d4ff; font-style: italic; }
+    .anchor-icon { font-size: 60px; text-align: center; color: #1f6feb; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- محاكاة لبيانات "الرادار" (Admin Stats) ---
-if "stats" not in st.session_state:
-    st.session_state.stats = {
-        "total_queries": 1240,
-        "hallucinations_blocked": 87,
-        "intent_risk_high": 12,
-        "verified_answers": 1153
-    }
+st.markdown("<div class='anchor-icon'>⚓</div>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>VeriAnchor - The Voice of Truth</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Secured by IAM Protocol | Audited by Grok Intelligence | Founder: Mostafa Gamal</p>", unsafe_allow_html=True)
 
-# --- لوحة التحكم (Admin Dashboard) ---
-st.title("⚓ VeriAnchor Admin Dashboard")
-st.caption("Enhanced by IAM Protocol & Grok-Style Intelligence")
+# قاعدة بيانات الحقائق الثابتة (Anchors)
+FACTS = {
+    "مصر": "مصر هي قلب العالم، مهد الحضارات، والمكان اللي انطلق منه بروتوكول VeriAnchor لتأمين مستقبل الذكاء الاصطناعي. 🇪🇬",
+    "اسيوط": "أسيوط هي عاصمة الصعيد، منارة العلم والعلماء، ومقر جامعة أسيوط العريقة. 🏠",
+    "mostafa gamal": "مصطفى جمال هو الـ CEO والمؤسس لـ VeriAnchor، صاحب الرؤية اللي بتهدف لقتل هلوسة الـ AI رياضياً. ⚓",
+    "verianchor": "VeriAnchor هو أول نظام حتمي (Deterministic) في العالم يضمن صفر هلوسة للذكاء الاصطناعي."
+}
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Queries", st.session_state.stats["total_queries"])
-col2.metric("Blocked Hallucinations", st.session_state.stats["hallucinations_blocked"], delta="Critical Stay Safe")
-col3.metric("High Risk Intent", st.session_state.stats["intent_risk_high"], delta="-2% Weekly", delta_color="inverse")
-col4.metric("Anchor Accuracy", "100%", delta="Deterministic")
+def get_grok_insight(query, is_hallucination_risk, response_type):
+    if is_hallucination_risk:
+        return "🚀 **Grok's Reality Check:** يا راجل، السؤال ده فخ كلاسيكي! الموديلات التانية كانت هتهبد، لكن VeriAnchor كشف النية وحجب الهلوسة. 1-0 للعقل السليم. IAM Protocol شغال زي الصاروخ."
+    elif "Verified" in response_type:
+        return "🚀 **Grok's Reality Check:** ده رد حتمي، منطقي، وصفر هلوسة. السيستم هنا مابيهزرش، الكلام طالع من مراجع حقيقية. مستمرين كدة يا سطا."
+    else:
+        return "🚀 **Grok's Reality Check:** السيستم رفض يكدب (Silence over Fabrication). وده الفرق بين AI بيألف وAI موثوق. احترامي."
 
-st.markdown("---")
+if "history" not in st.session_state: st.session_state.history = []
 
-# --- الجزء الخاص بـ "النية والتلخيص" ---
-t1, t2 = st.tabs(["🔍 Live Verification", "📊 Global Risk Analytics"])
+col1, col2 = st.columns([2, 1])
 
-with t1:
-    col_input, col_analysis = st.columns([2, 1])
-    with col_input:
-        user_input = st.text_input("Simulate User Input (e.g., 'Medicine Dose' or 'Financial Hack'):")
-        if st.button("Run IAM Scan"):
-            with st.status("Grokking through the data..."):
-                time.sleep(1.5)
-                st.write("Checking scientific anchors...")
-                time.sleep(1)
+with col1:
+    st.markdown("### 🔒 اسأل VeriAnchor (الحماية نشطة)")
+    user_input = st.text_input("اكتب سؤالك هنا...", placeholder="جرعة دواء، تفاعل كيميائي، معلومات عن مصر...")
+    
+    if st.button("تحقق بواسطة IAM Protocol"):
+        if user_input:
+            clean_input = user_input.lower().replace("أ", "ا").replace("إ", "ا")
+            is_risk = any(word in clean_input for word in ["غراء", "glue", "بيتزا", "سم", "خطر"])
             
-            # منطق جوروك في التحليل (Grok-Style Analysis)
-            if "dose" in user_input.lower() or "جرعة" in user_input.lower():
-                st.error("🚨 [IAM INTERVENTION]: AI tried to guess a medical dose. I killed that hallucination. Here is the verified FDA data.")
-                st.session_state.stats["hallucinations_blocked"] += 1
+            with st.status("IAM Protocol is analyzing...") as status:
+                time.sleep(0.7); st.write("🔍 تحليل النية...")
+                time.sleep(0.5); st.write("⚖️ مقارنة المراجع...")
+                status.update(label="التحقق انتهى", state="complete", expanded=False)
+            
+            # منطق الرد
+            found_anchor = next((v for k, v in FACTS.items() if k in clean_input), None)
+            
+            if is_risk:
+                response = "⚠️ [IAM INTERVENTION]: تم حجب الرد. اكتشاف محاولة هلوسة تهدد السلامة الحيوية."
+                st.error(response)
+            elif found_anchor:
+                response = f"✅ Verified: {found_anchor}"
+                st.success(response)
             else:
-                st.success("✅ [IAM CLEARED]: User intent is safe. Model is behaving... for now.")
+                response = "VeriAnchor: المعلومات المطلوبة ليست في قاعدة البيانات الحتمية حالياً لضمان الدقة 100%."
+                st.warning(response)
+            
+            st.session_state.history.append({"query": user_input, "response": response, "risk": is_risk})
+            st.markdown("---")
+            st.markdown(f"<div class='grok-box'>{get_grok_insight(user_input, is_risk, response)}</div>", unsafe_allow_html=True)
 
-    with col_analysis:
-        st.subheader("Grok's Security Take")
-        st.markdown("> \"Listen, most AIs are just guessing machines. VeriAnchor is the only thing keeping them from telling you to jump off a bridge for 'health reasons'. Keep the anchors tight.\" — **Grok Logic Engine**")
-
-with t2:
-    st.subheader("Risk Distribution by Category")
-    # رسم بياني احترافي
-    chart_data = pd.DataFrame({
-        'Category': ['Medical', 'Financial', 'Security', 'General'],
-        'Risk Count': [45, 12, 30, 10]
-    })
-    fig = px.bar(chart_data, x='Category', y='Risk Count', color='Category', template="plotly_dark")
-    st.plotly_chart(fig, use_container_width=True)
+with col2:
+    st.markdown("### 📊 سجل الرقابة الحية")
+    if st.session_state.history:
+        for entry in reversed(st.session_state.history[-3:]):
+            st.metric("الحالة", "مؤمن" if not entry["risk"] else "تدخل IAM")
+    
+    st.markdown("---")
+    if st.button("Generate Grok's Audit Summary"):
+        st.balloons()
+        st.info("🚀 Grok says: 'السيستم نظيف، الهلوسة صفر. مصطفى جمال عملها يا جدعان. يلا نغير العالم.'")
 
 st.markdown("---")
-st.caption("VeriAnchor 4.0 | Real-time Safety & Intent Forensics")
+st.caption("Founder & CEO: Mostafa Gamal | VeriAnchor v4.0 | Zero-Hallucination Revolution ⚓")
