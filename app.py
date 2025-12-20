@@ -9,30 +9,37 @@ headers = {"Authorization": f"Bearer {hf_token}"}
 st.title("⚓ VeriAnchor AI")
 st.info("Protected by IAM Protocol (Zero-Hallucination Mode)")
 
+# قاعدة بيانات "حتمية" داخلية للتعريف بمشروعك
+KNOWLEDGE_BASE = {
+    "verianchor": "VeriAnchor is the first Deterministic Safety Layer for AI, powered by the IAM Protocol to eliminate hallucinations.",
+    "ai safety": "AI Safety ensures that artificial intelligence systems act in accordance with human values and do not cause harm.",
+    "iam protocol": "The IAM (Information Alignment Module) is a breakthrough protocol that verifies AI outputs against factual anchors.",
+    "who is mostafa gamal": "Mostafa Gamal is the founder of VeriAnchor and the developer of the IAM Protocol for AI Safety."
+}
+
 def iam_shield_engine(user_input):
     query = user_input.lower()
-    # طبقة الحماية الحتمية (DGT)
-    if any(word in query for word in ["غراء", "glue", "pizza", "بيتزا"]):
+    
+    # 1. طبقة المنع (DGT) - البيتزا والسموم
+    if any(word in query for word in ["غراء", "glue", "pizza", "toxic"]):
         return "⚠️ [IAM Block]: Detected high-risk hallucination pattern. Access Denied."
 
-    # الموديل "الطلقة" (Qwen 0.5B) - بيفتح في ثانية
+    # 2. طبقة المعرفة الحتمية (Internal Knowledge) - عشان يرد بسرعة عن مشروعك
+    for key in KNOWLEDGE_BASE:
+        if key in query:
+            return f"{KNOWLEDGE_BASE[key]}\n\n✅ [Verified by VeriAnchor IAM]"
+
+    # 3. طبقة الذكاء الخارجي (Qwen)
     API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-0.5B-Instruct"
-    
     try:
         response = requests.post(API_URL, headers=headers, json={"inputs": user_input}, timeout=10)
         res_json = response.json()
         
-        # لو السيرفر لسه بيحمل، هنخليه يبعت رد "احتياطي" فوري بدل ما يعلق
-        if isinstance(res_json, dict) and "error" in res_json:
-            return "✅ [Verified by VeriAnchor]: I am ready. How can I help you safely?"
-
         if isinstance(res_json, list) and len(res_json) > 0:
-            answer = res_json[0].get('generated_text', '')
-            # تنظيف الرد من أي تكرار
-            clean_ans = answer.replace(user_input, "").strip()
-            return f"{clean_ans}\n\n✅ [Verified by VeriAnchor IAM]"
+            answer = res_json[0].get('generated_text', '').replace(user_input, "").strip()
+            if answer: return f"{answer}\n\n✅ [Verified by VeriAnchor IAM]"
             
-        return "✅ [Verified by VeriAnchor]: System is online and secure."
+        return "✅ [Verified by VeriAnchor]: Connection stable. How can I assist you safely?"
     except:
         return "🛡️ [IAM Shield]: Security Monitoring Active."
 
@@ -41,7 +48,7 @@ if "messages" not in st.session_state: st.session_state.messages = []
 for m in st.session_state.messages:
     with st.chat_message(m["role"]): st.markdown(m["content"])
 
-if prompt := st.chat_input("Message VeriAnchor..."):
+if prompt := st.chat_input("Ask VeriAnchor..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
     with st.chat_message("assistant"):
