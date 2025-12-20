@@ -4,6 +4,43 @@ import hashlib
 
 # 1. إعدادات الصفحة الفاخرة
 st.set_page_config(page_title="VeriAnchor | The Standard for AI Truth", layout="wide")
+import streamlit as st
+import base64
+
+# وظيفة لتحويل الصورة لكود يفهمه المتصفح
+def get_base64(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+# تحويل صورتك (تأكد أن اسم الملف bg.png)
+bin_str = get_base64('bg.png')
+
+# كود الـ CSS السحري للخلفية
+page_bg_img = f'''
+<style>
+.stApp {{
+    background-image: url("data:image/png;base64,{bin_str}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}}
+
+/* إضافة طبقة تظليل عشان الكلام يظهر بوضوح */
+.stApp::before {{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* تظليل بنسبة 60% */
+    z-index: -1;
+}}
+</style>
+'''
+
+st.markdown(page_bg_img, unsafe_allow_html=True)
 
 # 2. CSS مخصص لواجهة "نظام أمني" (Cyberpunk Professional)
 st.markdown("""
