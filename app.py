@@ -1,68 +1,30 @@
 import streamlit as st
-import hashlib
-import time
-import os
-from datetime import datetime
+import google.generativeai as genai
 
-# --- إعدادات الواجهة السيادية ---
-st.set_page_config(page_title="VeriAnchor Sovereign OS v4", layout="wide")
-st.markdown("""
-    <style>
-    .stApp { background-color: #01080e; color: #00ffcc; font-family: 'Courier New'; }
-    .stButton > button { background-color: #ff2d55; color: white; border-radius: 8px; width: 100%; }
-    .sovereign-card { background-color: #1a1f2e; border-left: 5px solid #00ffcc; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
-    .poison-pill { border: 2px solid #ff2d55; color: #ff2d55; padding: 10px; text-align: center; font-weight: bold; }
-    </style>
-    """, unsafe_allow_html=True)
+# إعدادات الواجهة السيادية
+st.set_page_config(page_title="VeriAnchor Sovereign", page_icon="🛡️")
 
-# --- محرك الذاكرة والسم التقني (Poison Pill) ---
-if "tamper_detected" not in st.session_state:
-    st.session_state.tamper_detected = False
-
-def load_memory():
-    if st.session_state.tamper_detected:
-        # حقن بيانات مسمومة (هلوسة متعمدة لحماية سر المهنة)
-        return "ERROR: Critical Leak Detected. System injecting poison data... [Data Corrupted: 0x88234]"
-    return "Sovereign Memory Active: Context Secured locally."
-
-# --- واجهة المستخدم ---
-st.markdown("<h1 style='text-align: center;'>⚓ VeriAnchor Sovereign OS v4</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>Sovereign Memory | Octa-Dimensional Engine | Poison Pill Active</p>", unsafe_allow_html=True)
-
-col1, col2 = st.columns([2, 1])
-
-with col1:
-    st.subheader("🧠 الحصن السيادي (Sovereign Chat)")
-    user_query = st.text_input("ادخل الأمر السيادي (IAM Protocol):")
-    
-    if st.button("EXECUTE"):
-        with st.spinner("التحليل عبر الـ 8 جوانب..."):
-            time.sleep(1)
-            # محاكاة التقرير الرياضي
-            s_total = 0.98  # قيمة افتراضية للسيادة
-            resp_hash = hashlib.sha256(user_query.encode()).hexdigest()[:16]
-            
-            st.markdown(f"""
-            <div class='sovereign-card'>
-                <b>الرد السيادي:</b> تم معالجة طلبك بنجاح داخل الحصن.<br>
-                <small>S_total: {s_total} | Hash: {resp_hash}</small>
-            </div>
-            """, unsafe_allow_html=True)
-
-with col2:
-    st.subheader("🛡️ أنظمة الدفاع")
-    
-    # زر تقرير المحاكمة الرياضية
-    if st.button("Generate Sovereignty Report (PDF)"):
-        st.success("تم إنشاء تقرير المحاكمة الرياضية: No External Leaks Detected.")
-        st.info("التقرير يثبت بالمعادلات إن الرد خرج من الذاكرة المحلية فقط.")
-
-    # نظام السم التقني (للتعطيل في حالة الخطر)
-    if st.checkbox("تفعيل بروتوكول السم (Poison Pill)"):
-        st.session_state.tamper_detected = True
-        st.markdown("<div class='poison-pill'>Poison Pill Activated: Data is now Indecipherable</div>", unsafe_allow_html=True)
-    else:
-        st.session_state.tamper_detected = False
-
+# الهوية والتوثيق
+st.title("🛡️ VeriAnchor: iAM-Sovereign")
 st.markdown("---")
-st.caption("Mostafa Gamal | PCT/EG2025/050040 | Sovereign Intelligence Infrastructure")
+st.caption("Patent Pending: EG/P/2025/1660 | Official Secure Portal")
+
+# الربط مع الذكاء الاصطناعي
+try:
+    if "GEMINI_API_KEY" in st.secrets:
+        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # بوابة العبور
+        password = st.text_input("كود العبور السيادي (iAM):", type="password")
+        if st.button("تشغيل المحرك"):
+            if password == st.secrets["ACCESS_TOKEN"]:
+                st.success("✅ تم تفعيل البروتوكول. أهلاً بك يا سيادة الـ CEO.")
+                response = model.generate_content("أنت الآن تعمل كمحرك VeriAnchor السيادي. قدم تحية لمصطفى جمال.")
+                st.write(response.text)
+            else:
+                st.error("❌ كود العبور غير صحيح.")
+    else:
+        st.info("🔒 النظام في انتظار تفعيل مفاتيح الأمان من AWS.")
+except Exception as e:
+    st.error(f"خطأ في الاتصال: {e}")
