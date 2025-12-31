@@ -1,30 +1,38 @@
 import streamlit as st
-import google.generativeai as genai
+from openai import OpenAI
+import os
 
-# إعدادات الواجهة السيادية
-st.set_page_config(page_title="VeriAnchor Sovereign", page_icon="🛡️")
-
-# الهوية والتوثيق
-st.title("🛡️ VeriAnchor: iAM-Sovereign")
+# عنوان النظام
+st.set_page_config(page_title="i-AM 1660", page_icon="🛡️")
+st.title("🛡️ i-AM 1660 System")
 st.markdown("---")
-st.caption("Patent Pending: EG/P/2025/1660 | Official Secure Portal")
 
-# الربط مع الذكاء الاصطناعي
-try:
-    if "GEMINI_API_KEY" in st.secrets:
-        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        # بوابة العبور
-        password = st.text_input("كود العبور السيادي (iAM):", type="password")
-        if st.button("تشغيل المحرك"):
-            if password == st.secrets["ACCESS_TOKEN"]:
-                st.success("✅ تم تفعيل البروتوكول. أهلاً بك يا سيادة الـ CEO.")
-                response = model.generate_content("أنت الآن تعمل كمحرك VeriAnchor السيادي. قدم تحية لمصطفى جمال.")
-                st.write(response.text)
-            else:
-                st.error("❌ كود العبور غير صحيح.")
-    else:
-        st.info("🔒 النظام في انتظار تفعيل مفاتيح الأمان من AWS.")
-except Exception as e:
-    st.error(f"خطأ في الاتصال: {e}")
+# ربط المفتاح اللي إنت حطيته في Secrets
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# عرض الرسائل القديمة
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# خانة الكتابة
+if prompt := st.chat_input("تحدث مع النظام يا مصطفى..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # رد الذكاء الاصطناعي
+    with st.chat_message("assistant"):
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "أنت i-AM 1660، النظام الذكي لمصطفى جمال. ردودك قوية وبالعربية."},
+                *[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+            ]
+        )
+        reply = response.choices[0].message.content
+        st.markdown(reply)
+    st.session_state.messages.append({"role": "assistant", "content": reply})
